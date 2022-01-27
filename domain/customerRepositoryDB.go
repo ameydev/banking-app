@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ameydev/banking-app/errs"
+	"github.com/ameydev/banking-app/logger"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -18,6 +19,7 @@ func (d CustomerRepositoryDB) FindAll() ([]Customer, *errs.AppError) {
 
 	rows, err := d.client.Query(findAllSql)
 	if err != nil {
+		logger.Error("Unexpected DB error " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected DB error")
 	}
 	customers := make([]Customer, 0)
@@ -25,6 +27,7 @@ func (d CustomerRepositoryDB) FindAll() ([]Customer, *errs.AppError) {
 		var c Customer
 		err := rows.Scan(&c.Id, &c.Name, &c.City, &c.Zip, &c.DateofBirth, &c.Status)
 		if err != nil {
+			logger.Error("Unexpected DB error " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected DB error")
 		}
 		customers = append(customers, c)
@@ -35,6 +38,7 @@ func (d CustomerRepositoryDB) FindAll() ([]Customer, *errs.AppError) {
 func NewCustomerRepositoryDB(dbURL string) CustomerRepositoryDB {
 	client, err := sql.Open("mysql", dbURL)
 	if err != nil {
+		logger.Error("Error while connecting to SQL server " + err.Error())
 		panic(err)
 	}
 	// See "Important settings" section.
@@ -53,8 +57,10 @@ func (d CustomerRepositoryDB) ById(id string) (*Customer, *errs.AppError) {
 	err := row.Scan(&c.Id, &c.Name, &c.City, &c.Zip, &c.DateofBirth, &c.Status)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			logger.Error("No rows found " + err.Error())
 			return nil, errs.NewNotFoundError("No customer found")
 		} else {
+			logger.Error("Unexpected DB error " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected DB error")
 		}
 	}
@@ -75,6 +81,7 @@ func (d CustomerRepositoryDB) ByStatus(status string) ([]Customer, *errs.AppErro
 
 	rows, err := d.client.Query(findAllSql, status)
 	if err != nil {
+		logger.Error("Unexpected DB error " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected DB error")
 	}
 	customers := make([]Customer, 0)
@@ -82,6 +89,7 @@ func (d CustomerRepositoryDB) ByStatus(status string) ([]Customer, *errs.AppErro
 		var c Customer
 		err := rows.Scan(&c.Id, &c.Name, &c.City, &c.Zip, &c.DateofBirth, &c.Status)
 		if err != nil {
+			logger.Error("Unexpected DB error " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected DB error")
 		}
 		customers = append(customers, c)
